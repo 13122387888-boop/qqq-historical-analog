@@ -39,15 +39,15 @@ const I18N = {
     forwardReturns: "Forward Returns",
     topIndependent: "Top independent matches",
     horizon: "Horizon",
-    upProbability: "Up probability",
+    upProbability: "Analog up rate",
     average: "Average",
     median: "Median",
     best: "Best",
     worst: "Worst",
     acrossWindows: "Across observation windows",
     historicalConsensus: "Historical Consensus",
-    consensusFootnote: "Based on each window's historical 20D outcomes—not a price prediction.",
-    rankedSimilarity: "Ranked by blended path similarity",
+    consensusFootnote: "V2 calibrated 20D probabilities; weak analog evidence shrinks toward the regime base rate.",
+    rankedSimilarity: "Ranked by development-selected V2 similarity",
     topHistoricalMatches: "Top Historical Matches",
     selectRow: "Select a row to highlight its path",
     rank: "Rank",
@@ -71,6 +71,8 @@ const I18N = {
     bear: "Bear",
     dayReturn: "{days}D return",
     upProbability20: "20D Up Probability",
+    calibratedUpProbability20: "20D Calibrated Up Probability",
+    analogEvidenceDetail: "{weight}% analog evidence · ESS {ess}",
     medianReturn20: "20D Median Return",
     medianReturn30: "30D Median Return",
     medianMaxDrawdown: "Median Max Drawdown",
@@ -98,9 +100,12 @@ const I18N = {
     signal_neutral: "Neutral",
     signal_mixed: "Mixed",
     similarityBreakdown: "Similarity breakdown",
-    blendedWeightNote: "Final score = 70% price path + 30% daily returns",
+    blendedWeightNote: "V2 weights: {price}% path · {returns}% returns · {regime}% state",
     priceSimilarity: "Price-path similarity",
     returnSimilarity: "Daily-return similarity",
+    regimeSimilarity: "Market-state similarity",
+    selectedCaseWeight: "Selected-case weight",
+    effectiveSampleSize: "Effective sample size {value}",
     priceRmse: "Price-path RMSE",
     returnRmse: "Return-path RMSE",
     weightLabel: "{value}% weight",
@@ -108,7 +113,7 @@ const I18N = {
     scoreNotProbability: "Similarity scores are ranking measures—not probabilities.",
     auditTrail: "Audit trail",
     dataProvenance: "Data Provenance",
-    algorithmVersion: "Algorithm {version}",
+    algorithmVersion: "V1 {version} · V2 {v2}",
     source: "Source",
     priceField: "Price field",
     adjustment: "Adjustment",
@@ -117,9 +122,10 @@ const I18N = {
     generated: "Generated",
     datasetFingerprint: "Dataset fingerprint",
     modelValidation: "Point-in-time model validation",
-    walkForwardBacktest: "Walk-forward Backtest",
-    backtestNote: "Retrospective holdout test of the unchanged V1 model. Lower Brier score is better.",
-    analogBrier: "Analog Brier",
+    walkForwardBacktest: "V1 vs V2 Walk-forward Backtest",
+    backtestNote: "V2 parameters were selected on 2010–2022 only, then evaluated on the 2023+ holdout. Lower Brier is better.",
+    v1Brier: "V1 Brier",
+    v2Brier: "V2 Brier",
     regimeBaseline: "Regime baseline",
     brierSkill: "Brier skill",
     hitRate: "Hit rate",
@@ -133,6 +139,8 @@ const I18N = {
     notesDataBody: "QQQ daily data from {source}; {field} is used with {adjustment}. Coverage: {start} to {end}, {rows} trading days.",
     notesAnalogTitle: "Published V1 analog model",
     notesAnalogBody: "The similarity rank combines 70% normalized-price-path RMSE and 30% daily-return RMSE. It selects 20 cases separated by more than 20 trading days. Similarity is a ranking score, not a probability.",
+    notesV2Title: "Selected V2 configuration",
+    notesV2Body: "For the current {lookback}D view, development-only selection chose {price}% price path, {returns}% daily returns and {regime}% soft market state; Top {topK}, {kernel}. The 20D probability gives analog evidence a {alpha}% weight and shrinks the rest toward the same-regime base rate.",
     notesPointInTimeTitle: "Point-in-time rule",
     notesPointInTimeBody: "At each historical forecast date, candidate outcomes had to be fully known: candidate end + 30 trading days could not exceed the forecast date. Future rows never enter similarity calculations.",
     notesBacktestTitle: "Backtest convention",
@@ -140,7 +148,12 @@ const I18N = {
     notesMetricsTitle: "How to read the metrics",
     notesMetricsBody: "Brier score evaluates probability accuracy and is better when lower. Brier skill above 0% means the analog model beats the point-in-time probability for the same MA200 regime. Hit rate is secondary and does not measure calibration.",
     notesAuditTitle: "Interpretation boundary",
-    notesAuditBody: "The no-look-ahead audit verifies data isolation; the backtest measures historical predictive value. Neither guarantees future performance, and the current V1 weights have not yet been optimised.",
+    notesAuditBody: "The no-look-ahead audit verifies data isolation; the backtest measures historical predictive value. V2 was selected without using the 2023+ holdout, but its small holdout improvement is not statistically conclusive and does not guarantee future performance.",
+    optimizedV2Weight: "Optimized V2 weight",
+    softMarketState: "Soft market state",
+    selectedAnalogCount: "Selected analogs",
+    distanceWeighted: "Distance weighted",
+    equalWeighted: "Equal weighted",
   },
   zh: {
     siteTitle: "QQQ 历史相似行情",
@@ -180,15 +193,15 @@ const I18N = {
     forwardReturns: "后续收益统计",
     topIndependent: "独立历史案例",
     horizon: "周期",
-    upProbability: "上涨比例",
+    upProbability: "相似案例上涨率",
     average: "平均收益",
     median: "中位数收益",
     best: "最好",
     worst: "最差",
     acrossWindows: "多观察窗口对比",
     historicalConsensus: "历史共识",
-    consensusFootnote: "基于各窗口历史案例的20日结果，并非价格预测。",
-    rankedSimilarity: "按综合路径相似度排序",
+    consensusFootnote: "V2校准后的20日概率；相似证据较弱时会向市场环境基础概率收缩。",
+    rankedSimilarity: "按开发期选出的V2相似度排序",
     topHistoricalMatches: "最相似历史行情",
     selectRow: "点击一行可在图中高亮对应路径",
     rank: "排名",
@@ -212,6 +225,8 @@ const I18N = {
     bear: "熊市",
     dayReturn: "{days}日收益",
     upProbability20: "20日上涨比例",
+    calibratedUpProbability20: "20日校准后上涨概率",
+    analogEvidenceDetail: "相似行情证据权重 {weight}% · 有效样本 {ess}",
     medianReturn20: "20日中位数收益",
     medianReturn30: "30日中位数收益",
     medianMaxDrawdown: "最大回撤中位数",
@@ -239,9 +254,12 @@ const I18N = {
     signal_neutral: "中性",
     signal_mixed: "分歧",
     similarityBreakdown: "相似度分解",
-    blendedWeightNote: "综合分数 = 70%价格路径 + 30%每日收益",
+    blendedWeightNote: "V2权重：价格{price}% · 收益{returns}% · 环境{regime}%",
     priceSimilarity: "价格路径相似度",
     returnSimilarity: "每日收益相似度",
+    regimeSimilarity: "市场状态相似度",
+    selectedCaseWeight: "该案例分析权重",
+    effectiveSampleSize: "有效样本量 {value}",
     priceRmse: "价格路径 RMSE",
     returnRmse: "收益路径 RMSE",
     weightLabel: "权重 {value}%",
@@ -249,7 +267,7 @@ const I18N = {
     scoreNotProbability: "相似度仅用于排序，并非概率。",
     auditTrail: "审计信息",
     dataProvenance: "数据可追溯性",
-    algorithmVersion: "算法版本 {version}",
+    algorithmVersion: "V1 {version} · V2 {v2}",
     source: "数据源",
     priceField: "价格字段",
     adjustment: "复权方式",
@@ -258,9 +276,10 @@ const I18N = {
     generated: "生成时间",
     datasetFingerprint: "数据指纹",
     modelValidation: "逐时点模型验证",
-    walkForwardBacktest: "滚动历史回测",
-    backtestNote: "对未改动 V1 模型进行回溯式留出检验；Brier 分数越低越好。",
-    analogBrier: "相似模型 Brier",
+    walkForwardBacktest: "V1 与 V2 滚动回测",
+    backtestNote: "V2参数只用2010—2022年选择，再在2023年后的留出期检验；Brier越低越好。",
+    v1Brier: "V1 Brier",
+    v2Brier: "V2 Brier",
     regimeBaseline: "市场环境基准",
     brierSkill: "Brier 提升",
     hitRate: "方向命中率",
@@ -274,6 +293,8 @@ const I18N = {
     notesDataBody: "QQQ 日线来自 {source}；使用 {field}，复权方式为{adjustment}。覆盖 {start} 至 {end}，共 {rows} 个交易日。",
     notesAnalogTitle: "当前发布的 V1 相似模型",
     notesAnalogBody: "相似度排名由70%归一化价格路径 RMSE和30%每日收益 RMSE组成；选取20个案例，案例结束日彼此间隔超过20个交易日。相似度只是排序分数，不是概率。",
+    notesV2Title: "V2已选参数",
+    notesV2Body: "当前{lookback}日视图仅用开发期选出：价格路径{price}%、每日收益{returns}%、软市场状态{regime}%；Top {topK}，{kernel}。20日概率仅给予相似行情{alpha}%证据权重，其余向同市场环境基础概率收缩。",
     notesPointInTimeTitle: "逐时点规则",
     notesPointInTimeBody: "在每个历史预测日，候选案例的结果必须已经完整发生，即候选结束日加30个交易日不得晚于预测日；相似度计算绝不读取未来行。",
     notesBacktestTitle: "回测口径",
@@ -281,7 +302,12 @@ const I18N = {
     notesMetricsTitle: "指标怎么读",
     notesMetricsBody: "Brier 分数衡量概率准确度，越低越好；Brier 提升高于0%表示相似模型优于当时同MA200市场环境的基础上涨概率。方向命中率只是辅助指标，不能衡量概率校准。",
     notesAuditTitle: "结论边界",
-    notesAuditBody: "无前视审计验证数据隔离，滚动回测检验历史预测价值；二者都不保证未来表现，当前 V1 权重尚未经过优化。",
+    notesAuditBody: "无前视审计验证数据隔离，滚动回测检验历史预测价值。V2选参没有使用2023年后的留出期，但留出期改善很小且统计证据不足，也不保证未来表现。",
+    optimizedV2Weight: "V2优化权重",
+    softMarketState: "软市场状态",
+    selectedAnalogCount: "入选案例数",
+    distanceWeighted: "按距离加权",
+    equalWeighted: "等权",
   },
 };
 
@@ -298,6 +324,7 @@ function initialLanguage() {
 const state = {
   data: null,
   backtest: null,
+  v2: null,
   language: initialLanguage(),
   lookback: 30,
   mode: "all_regimes",
@@ -352,6 +379,11 @@ const elements = {
   backtestPeriod: document.querySelector("#backtest-period"),
   backtestSummary: document.querySelector("#backtest-summary"),
   backtestTable: document.querySelector("#backtest-table-body"),
+  methodPriceWeight: document.querySelector("#method-price-weight"),
+  methodReturnWeight: document.querySelector("#method-return-weight"),
+  methodRegimeWeight: document.querySelector("#method-regime-weight"),
+  methodTopK: document.querySelector("#method-top-k"),
+  methodKernel: document.querySelector("#method-kernel"),
 };
 
 function applyStaticTranslations() {
@@ -428,8 +460,12 @@ function getLookbackData() {
   return state.data.lookbacks[String(state.lookback)];
 }
 
+function getV2Selection(lookback = state.lookback, mode = state.mode) {
+  return state.v2?.selections?.[String(lookback)]?.[mode] || null;
+}
+
 function getViewData() {
-  return getLookbackData()[state.mode];
+  return getV2Selection()?.current_forecast?.display_view || getLookbackData()[state.mode];
 }
 
 function baseAxis() {
@@ -454,11 +490,18 @@ function renderHeader() {
 function renderStats() {
   const view = getViewData();
   const stats = view.statistics;
+  const v2Forecast = getV2Selection()?.current_forecast;
+  const calibrated20 = v2Forecast?.horizons?.["20d"];
   const cards = [
     {
-      label: t("upProbability20"),
-      value: formatPercent(stats["20d"].up_probability, 0, false),
-      detail: t("independentAnalogs", { count: view.matches.length }),
+      label: t(calibrated20 ? "calibratedUpProbability20" : "upProbability20"),
+      value: formatPercent(calibrated20?.calibrated_probability ?? stats["20d"].up_probability, 0, false),
+      detail: calibrated20
+        ? t("analogEvidenceDetail", {
+            weight: Math.round(calibrated20.analog_evidence_weight * 100),
+            ess: v2Forecast.effective_sample_size.toFixed(1),
+          })
+        : t("independentAnalogs", { count: view.matches.length }),
       className: "primary",
     },
     {
@@ -505,16 +548,26 @@ function renderSelectedMatch() {
 
 function renderSimilarityBreakdown() {
   const match = getViewData().matches.find((item) => item.rank === state.selectedRank) || getViewData().matches[0];
+  const selection = getV2Selection();
+  const profile = selection?.champion?.profile || {
+    price_weight: 0.7,
+    return_weight: 0.3,
+    regime_weight: 0,
+  };
   const metrics = [
-    { label: t("priceSimilarity"), value: `${match.price_similarity.toFixed(1)}%`, detail: t("weightLabel", { value: 70 }) },
-    { label: t("returnSimilarity"), value: `${match.return_similarity.toFixed(1)}%`, detail: t("weightLabel", { value: 30 }) },
-    { label: t("priceRmse"), value: match.rmse.toFixed(3), detail: t("lowerIsCloser") },
-    { label: t("returnRmse"), value: `${(match.return_rmse * 100).toFixed(3)}%`, detail: t("lowerIsCloser") },
+    { label: t("priceSimilarity"), value: `${match.price_similarity.toFixed(1)}%`, detail: t("weightLabel", { value: Math.round(profile.price_weight * 100) }) },
+    { label: t("returnSimilarity"), value: `${match.return_similarity.toFixed(1)}%`, detail: t("weightLabel", { value: Math.round(profile.return_weight * 100) }) },
+    { label: t("regimeSimilarity"), value: `${(match.regime_similarity ?? 100).toFixed(1)}%`, detail: t("weightLabel", { value: Math.round(profile.regime_weight * 100) }) },
+    { label: t("selectedCaseWeight"), value: formatPercent(match.analysis_weight ?? 1 / getViewData().matches.length, 1, false), detail: t("effectiveSampleSize", { value: (selection?.current_forecast?.effective_sample_size ?? getViewData().matches.length).toFixed(1) }) },
   ];
   elements.similarityBreakdown.innerHTML = `
     <div class="breakdown-intro">
       <strong>${t("similarityBreakdown")}</strong>
-      <span>${t("blendedWeightNote")}</span>
+      <span>${t("blendedWeightNote", {
+        price: Math.round(profile.price_weight * 100),
+        returns: Math.round(profile.return_weight * 100),
+        regime: Math.round(profile.regime_weight * 100),
+      })}</span>
       <small>${t("scoreNotProbability")}</small>
     </div>
     ${metrics.map((metric) => `
@@ -530,6 +583,7 @@ function renderProvenance() {
   const fingerprint = provenance.csv_sha256 || "—";
   elements.algorithmVersion.textContent = t("algorithmVersion", {
     version: state.data.algorithm_version || "—",
+    v2: state.v2?.model_version || "—",
   });
   const items = [
     [t("source"), localizedDataSource(provenance.source || state.data.data_source || "—")],
@@ -549,16 +603,20 @@ function renderProvenance() {
 }
 
 function renderBacktest() {
-  const lookbackResult = state.backtest?.results?.[String(state.lookback)]?.[state.mode];
-  if (!lookbackResult) {
+  const v1Result = state.backtest?.results?.[String(state.lookback)]?.[state.mode];
+  const v2Result = getV2Selection()?.backtest;
+  if (!v1Result || !v2Result) {
     elements.backtestPanel.hidden = true;
     return;
   }
 
   const horizons = [5, 10, 20, 30];
-  const holdoutRows = horizons.map((horizon) => lookbackResult[`${horizon}d`].holdout);
-  const positiveCount = holdoutRows.filter((row) => row.brier_skill_vs_regime > 0).length;
-  const setup = state.backtest.setup || {};
+  const holdoutRows = horizons.map((horizon) => ({
+    v1: v1Result[`${horizon}d`].holdout,
+    v2: v2Result[`${horizon}d`].holdout,
+  }));
+  const positiveCount = holdoutRows.filter((row) => row.v2.brier_skill_vs_regime > 0).length;
+  const setup = state.v2.selection_policy || state.backtest.setup || {};
   elements.backtestPanel.hidden = false;
   elements.backtestPeriod.textContent = (setup.holdout_period || "—").replace(" to ", " → ");
   elements.backtestSummary.textContent = t("horizonsBeatBaseline", { count: positiveCount });
@@ -567,24 +625,38 @@ function renderBacktest() {
   elements.backtestTable.innerHTML = horizons
     .map((horizon, index) => {
       const row = holdoutRows[index];
-      const ci = row.brier_advantage_vs_regime_ci95 || [];
-      const verdict = t(`verdict_${row.verdict}`);
+      const ci = row.v2.brier_advantage_vs_regime_ci95 || [];
+      const verdict = t(`verdict_${row.v2.verdict}`);
       return `<tr>
-        <td><strong>${horizon}D</strong><small>n=${Number(row.sample_count).toLocaleString()}</small></td>
-        <td>${row.analog_brier.toFixed(3)}</td>
-        <td>${row.regime_brier.toFixed(3)}</td>
-        <td class="${valueClass(row.brier_skill_vs_regime)}">${formatPercent(row.brier_skill_vs_regime)}</td>
-        <td>${formatPercent(row.direction_hit_rate, 1, false)}</td>
-        <td><span class="evidence-chip ${row.verdict}" title="95% CI: ${ci.map((value) => Number(value).toFixed(4)).join(" → ")}">${verdict}</span></td>
+        <td><strong>${horizon}D</strong><small>n=${Number(row.v2.sample_count).toLocaleString()}</small></td>
+        <td>${row.v1.analog_brier.toFixed(3)}</td>
+        <td>${row.v2.v2_brier.toFixed(3)}</td>
+        <td>${row.v2.regime_brier.toFixed(3)}</td>
+        <td class="${valueClass(row.v2.brier_skill_vs_regime)}">${formatPercent(row.v2.brier_skill_vs_regime)}</td>
+        <td><span class="evidence-chip ${row.v2.verdict}" title="95% CI: ${ci.map((value) => Number(value).toFixed(4)).join(" → ")}">${verdict}</span></td>
       </tr>`;
     })
     .join("");
+}
+
+function renderMethodology() {
+  const champion = getV2Selection()?.champion;
+  if (!champion) return;
+  elements.methodPriceWeight.textContent = `${Math.round(champion.profile.price_weight * 100)}%`;
+  elements.methodReturnWeight.textContent = `${Math.round(champion.profile.return_weight * 100)}%`;
+  elements.methodRegimeWeight.textContent = `${Math.round(champion.profile.regime_weight * 100)}%`;
+  elements.methodTopK.textContent = `K=${champion.top_k}`;
+  elements.methodKernel.textContent = t(champion.kernel === "distance" ? "distanceWeighted" : "equalWeighted");
 }
 
 function renderDataNotes() {
   if (!state.data || !state.backtest) return;
   const provenance = state.data.data_provenance || {};
   const setup = state.backtest.setup || {};
+  const selection = getV2Selection();
+  const champion = selection?.champion;
+  const profile = champion?.profile || { price_weight: 0.7, return_weight: 0.3, regime_weight: 0 };
+  const alpha20 = selection?.horizon_calibration?.["20d"]?.alpha ?? 0;
   const variables = {
     source: localizedDataSource(provenance.source || state.data.data_source || "—"),
     field: provenance.price_field || "—",
@@ -596,10 +668,18 @@ function renderDataNotes() {
     backtestEnd: setup.evaluation_end || "—",
     holdout: (setup.holdout_period || "—").replace(" to ", " → "),
     block: setup.bootstrap_block_days || 30,
+    lookback: state.lookback,
+    price: Math.round(profile.price_weight * 100),
+    returns: Math.round(profile.return_weight * 100),
+    regime: Math.round(profile.regime_weight * 100),
+    topK: champion?.top_k || 20,
+    kernel: t(champion?.kernel === "distance" ? "distanceWeighted" : "equalWeighted"),
+    alpha: Math.round(alpha20 * 100),
   };
   const sections = [
     ["notesDataTitle", "notesDataBody"],
     ["notesAnalogTitle", "notesAnalogBody"],
+    ["notesV2Title", "notesV2Body"],
     ["notesPointInTimeTitle", "notesPointInTimeBody"],
     ["notesBacktestTitle", "notesBacktestBody"],
     ["notesMetricsTitle", "notesMetricsBody"],
@@ -777,7 +857,31 @@ function renderReturnsTable() {
 }
 
 function renderConsensus() {
-  const consensus = state.data.consensus[state.mode];
+  let consensus = state.data.consensus[state.mode];
+  if (state.v2) {
+    const windows = {};
+    const labels = [];
+    for (const lookback of [10, 15, 20, 30]) {
+      const selection = getV2Selection(lookback, state.mode);
+      const forecast = selection.current_forecast.horizons["20d"];
+      const probability = forecast.calibrated_probability;
+      const signal = probability >= 0.6 ? "bullish" : probability < 0.4 ? "bearish" : "neutral";
+      labels.push(signal);
+      windows[String(lookback)] = {
+        signal,
+        up_probability_20d: probability,
+        median_return_20d: forecast.weighted_median_return,
+      };
+    }
+    consensus = {
+      overall: labels.filter((label) => label === "bullish").length >= 3
+        ? "bullish"
+        : labels.filter((label) => label === "bearish").length >= 3
+          ? "bearish"
+          : "mixed",
+      windows,
+    };
+  }
   elements.overallConsensus.textContent = t("overall", { signal: t(`signal_${consensus.overall}`) });
   elements.overallConsensus.className = `consensus-overall ${consensus.overall}`;
   elements.consensusGrid.innerHTML = [10, 15, 20, 30]
@@ -838,6 +942,7 @@ function renderAll(resetSelection = true) {
   renderConsensus();
   renderMatchesTable();
   renderBacktest();
+  renderMethodology();
   renderProvenance();
   renderDataNotes();
 }
@@ -863,12 +968,13 @@ function applyAnalysisFilters(lookback, sameRegimeOnly) {
     item.setAttribute("aria-pressed", String(active));
   });
   renderAll();
+  const v2Forecast = getV2Selection()?.current_forecast?.horizons?.["20d"];
   return {
     lookback: state.lookback,
     sameRegimeOnly,
     matchCount: getViewData().matches.length,
-    upProbability20d: getViewData().statistics["20d"].up_probability,
-    medianReturn20d: getViewData().statistics["20d"].median,
+    upProbability20d: v2Forecast?.calibrated_probability ?? getViewData().statistics["20d"].up_probability,
+    medianReturn20d: v2Forecast?.weighted_median_return ?? getViewData().statistics["20d"].median,
   };
 }
 
@@ -970,15 +1076,18 @@ async function loadData() {
   elements.error.hidden = true;
   elements.dashboard.hidden = true;
   try {
-    const [analysisResponse, backtestResponse] = await Promise.all([
+    const [analysisResponse, backtestResponse, v2Response] = await Promise.all([
       fetch("./data/analogs.json", { cache: "no-store" }),
       fetch("./data/backtest.json", { cache: "no-store" }),
+      fetch("./data/v2_model.json", { cache: "no-store" }),
     ]);
     if (!analysisResponse.ok) throw new Error(`Analysis data HTTP ${analysisResponse.status}`);
     if (!backtestResponse.ok) throw new Error(`Backtest data HTTP ${backtestResponse.status}`);
-    [state.data, state.backtest] = await Promise.all([
+    if (!v2Response.ok) throw new Error(`V2 model HTTP ${v2Response.status}`);
+    [state.data, state.backtest, state.v2] = await Promise.all([
       analysisResponse.json(),
       backtestResponse.json(),
+      v2Response.json(),
     ]);
     if (!window.echarts) throw new Error("ECharts failed to load.");
     renderHeader();

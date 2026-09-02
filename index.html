@@ -24,9 +24,9 @@
     <meta name="twitter:image" content="./og.png" />
     <title>QQQ Historical Analog</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./style.css?v=20260902-6" />
+    <link rel="stylesheet" href="./style.css?v=20260902-7" />
     <script src="./assets/echarts.min.js" defer></script>
-    <script src="./app.js?v=20260902-6" defer></script>
+    <script src="./app.js?v=20260902-7" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content" data-i18n="skipLink">Skip to analysis</a>
@@ -157,8 +157,8 @@
           <div class="panel-heading compact-heading">
             <div>
               <p class="section-kicker" data-i18n="modelValidation">Point-in-time model validation</p>
-              <h2 data-i18n="walkForwardBacktest">Walk-forward Backtest</h2>
-              <p class="panel-note" data-i18n="backtestNote">Retrospective holdout test of the unchanged V1 model. Lower Brier score is better.</p>
+              <h2 data-i18n="walkForwardBacktest">V1 vs V2 Walk-forward Backtest</h2>
+              <p class="panel-note" data-i18n="backtestNote">V2 parameters were selected on 2010–2022 only, then evaluated on the 2023+ holdout. Lower Brier is better.</p>
             </div>
             <div class="backtest-heading-meta">
               <span id="backtest-period" class="sample-note">—</span>
@@ -170,10 +170,10 @@
               <thead>
                 <tr>
                   <th data-i18n="horizon">Horizon</th>
-                  <th data-i18n="analogBrier">Analog Brier</th>
+                  <th data-i18n="v1Brier">V1 Brier</th>
+                  <th data-i18n="v2Brier">V2 Brier</th>
                   <th data-i18n="regimeBaseline">Regime baseline</th>
                   <th data-i18n="brierSkill">Brier skill</th>
-                  <th data-i18n="hitRate">Hit rate</th>
                   <th data-i18n="evidence">Evidence</th>
                 </tr>
               </thead>
@@ -196,7 +196,7 @@
                 <thead>
                   <tr>
                     <th data-i18n="horizon">Horizon</th>
-                    <th data-i18n="upProbability">Up probability</th>
+                    <th data-i18n="upProbability">Analog up rate</th>
                     <th data-i18n="average">Average</th>
                     <th data-i18n="median">Median</th>
                     <th data-i18n="best">Best</th>
@@ -223,20 +223,20 @@
 
         <section class="method-strip" aria-label="Methodology summary" data-i18n-aria="methodologyAria">
           <div>
-            <span class="method-index">70</span>
-            <p><strong data-i18n="pricePath">Price path</strong><br /><span data-i18n="normalizedRmseWeight">Normalized-path RMSE weight</span></p>
+            <span id="method-price-weight" class="method-index">—</span>
+            <p><strong data-i18n="pricePath">Price path</strong><br /><span data-i18n="optimizedV2Weight">Optimized V2 weight</span></p>
           </div>
           <div>
-            <span class="method-index">30</span>
-            <p><strong data-i18n="dailyReturns">Daily returns</strong><br /><span data-i18n="returnRmseWeight">Return-path RMSE weight</span></p>
+            <span id="method-return-weight" class="method-index">—</span>
+            <p><strong data-i18n="dailyReturns">Daily returns</strong><br /><span data-i18n="optimizedV2Weight">Optimized V2 weight</span></p>
           </div>
           <div>
-            <span class="method-index">±20</span>
-            <p><strong data-i18n="tradingDays">Trading days</strong><br /><span data-i18n="minSeparation">Minimum analog separation</span></p>
+            <span id="method-regime-weight" class="method-index">—</span>
+            <p><strong data-i18n="softMarketState">Soft market state</strong><br /><span data-i18n="optimizedV2Weight">Optimized V2 weight</span></p>
           </div>
           <div>
-            <span class="method-index">30D</span>
-            <p><strong data-i18n="forwardWindow">Forward window</strong><br /><span data-i18n="realizedOnly">Realized outcomes only</span></p>
+            <span id="method-top-k" class="method-index">—</span>
+            <p><strong data-i18n="selectedAnalogCount">Selected analogs</strong><br /><span id="method-kernel">—</span></p>
           </div>
         </section>
 

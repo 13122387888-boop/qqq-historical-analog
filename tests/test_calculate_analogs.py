@@ -15,6 +15,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 import calculate_analogs as analogs  # noqa: E402
 import backtest_walk_forward as backtest  # noqa: E402
+import optimize_similarity_v2 as optimizer  # noqa: E402
 
 
 class AlgorithmTests(unittest.TestCase):
@@ -129,6 +130,38 @@ class GeneratedOutputTests(unittest.TestCase):
                             metrics["verdict"],
                             ("validated_edge", "promising_not_conclusive", "no_observed_edge"),
                         )
+
+    def test_v2_optimisation_contract(self) -> None:
+        report_path = PROJECT_ROOT / "data" / "v2_model.json"
+        self.assertTrue(report_path.exists())
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        self.assertEqual(report["status"], "completed")
+        self.assertEqual(report["model_version"], optimizer.MODEL_VERSION)
+        self.assertTrue(report["selection_policy"]["holdout_not_used_for_selection"])
+        for lookback in analogs.LOOKBACKS:
+            for mode in ("all_regimes", "same_regime"):
+                selection = report["selections"][str(lookback)][mode]
+                champion = selection["champion"]
+                self.assertIn(champion["top_k"], optimizer.TOP_K_VALUES)
+                self.assertIn(champion["kernel"], {item[0] for item in optimizer.KERNELS})
+                current = selection["current_forecast"]
+                self.assertEqual(len(current["selected_matches"]), champion["top_k"])
+                self.assertAlmostEqual(
+                    sum(match["analysis_weight"] for match in current["selected_matches"]),
+                    1.0,
+                    places=6,
+                )
+                self.assertEqual(
+                    len(current["display_view"]["forward_distribution"]),
+                    analogs.FORWARD_DAYS + 1,
+                )
+                for horizon in analogs.FORWARD_HORIZONS:
+                    forecast = current["horizons"][f"{horizon}d"]
+                    self.assertGreaterEqual(forecast["calibrated_probability"], 0)
+                    self.assertLessEqual(forecast["calibrated_probability"], 1)
+                    self.assertIn(forecast["analog_evidence_weight"], optimizer.ALPHAS)
+                    holdout = selection["backtest"][f"{horizon}d"]["holdout"]
+                    self.assertGreater(holdout["sample_count"], 0)
 
 
 if __name__ == "__main__":

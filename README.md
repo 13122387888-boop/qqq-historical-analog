@@ -19,12 +19,14 @@ qqq-historical-analog/
 │   ├── analogs.json          # 四个窗口、两种 Regime 模式的完整结果
 │   ├── source.json           # 数据来源、复权方式与 CSV 指纹
 │   ├── walk_forward_validation.json # 多历史时点无前视校验报告
-│   └── backtest.json         # 逐日滚动预测回测、基准与可靠性指标
+│   ├── backtest.json         # V1逐日滚动预测回测、基准与可靠性指标
+│   └── v2_model.json         # V2选参、留出检验、当前预测与展示案例
 ├── scripts/
 │   ├── fetch_data.py         # 下载、清洗并保存日线
 │   ├── calculate_analogs.py  # 相似度、去重、未来表现和统计
 │   ├── validate_walk_forward.py # 滚动时点无前视审计
-│   └── backtest_walk_forward.py # V1 逐日滚动预测效果回测
+│   ├── backtest_walk_forward.py # V1 逐日滚动预测效果回测
+│   └── optimize_similarity_v2.py # V2开发期选参、概率收缩与留出检验
 ├── tests/
 │   └── test_calculate_analogs.py
 ├── requirements.txt
@@ -64,6 +66,19 @@ Similarity Score 仅是用于排序的相似度显示分数，不是上涨概率
 
 核心指标为 Brier Score（越低越好），并与当时同 MA200 市场环境下的历史上涨基础概率比较；同时记录方向命中率、收益中位数 MAE、50%/80%区间覆盖率和年度稳定性。由于相邻交易日预测的未来区间会重叠，95%区间使用30交易日移动区块自助法估计。页面中的“数据口径”弹窗集中说明数据源、复权、逐时点规则、回测划分和结论边界。
 
+## V2 概率模型
+
+V2只用2010—2022年开发期选择参数，2023年后的数据不参与选参。搜索空间包括价格路径、每日收益和软市场状态的组合权重、Top K（10/20/30）以及等权或距离加权。软市场状态由 Price/MA200、MA50/MA200、20日年化波动率和60日回撤组成。
+
+V2不会直接把历史案例上涨比例当作预测概率，而使用保守收缩公式：
+
+```text
+calibrated_probability = regime_probability
+                       + alpha × (analog_probability - regime_probability)
+```
+
+`alpha`只在开发期从0/25%/50%/75%/100%中选择；如果相似行情证据不稳定，模型会自动退回同MA200市场环境的基础概率。参数目标为“年度平均Brier优势减去0.25倍年度波动”，降低只在少数年份有效的过拟合风险。当前页面的折线图、案例表、加权分布和校准概率均来自已锁定的V2配置，V1结果保留在回测对照列中。
+
 ## 安装与生成数据
 
 建议使用 Python 3.10+。
@@ -74,9 +89,10 @@ python scripts/fetch_data.py
 python scripts/calculate_analogs.py
 python scripts/validate_walk_forward.py
 python scripts/backtest_walk_forward.py
+python scripts/optimize_similarity_v2.py
 ```
 
-第一条命令会输出 `data/qqq.csv` 和 `data/source.json`，第二条命令会输出 `data/analogs.json`。第三条命令通过“污染截止日后的数据”验证未来价格不会改变当时可见的匹配结果，报告写入 `data/walk_forward_validation.json`。第四条命令生成完整的逐日预测回测并写入 `data/backtest.json`。
+第一条命令会输出 `data/qqq.csv` 和 `data/source.json`，第二条命令会输出 `data/analogs.json`。第三条命令通过“污染截止日后的数据”验证未来价格不会改变当时可见的匹配结果，报告写入 `data/walk_forward_validation.json`。第四条命令生成V1完整逐日预测回测并写入 `data/backtest.json`。第五条只用开发期选择V2参数、执行每日留出检验并输出 `data/v2_model.json`。
 
 运行自动化校验：
 
@@ -111,7 +127,7 @@ http://localhost:8000
 5. 选择 `main` 与 `/(root)`，保存。
 6. 等待 Pages 发布完成后访问 GitHub 提供的网址。
 
-项目全部使用相对路径，并包含 `.nojekyll`，因此不需要额外构建步骤。每次更新行情后，重新运行上述四个 Python 脚本，并提交 `data/qqq.csv`、`data/analogs.json`、`data/source.json`、`data/walk_forward_validation.json` 和 `data/backtest.json` 即可。
+项目全部使用相对路径，并包含 `.nojekyll`，因此不需要额外构建步骤。每次更新行情后，重新运行上述五个 Python 脚本，并提交 `data/qqq.csv`、`data/analogs.json`、`data/source.json`、`data/walk_forward_validation.json`、`data/backtest.json` 和 `data/v2_model.json` 即可。
 
 ## 第一版边界
 

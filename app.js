@@ -244,10 +244,9 @@ function initialLanguage() {
 const state = {
   data: null,
   language: initialLanguage(),
-  lookback: 15,
+  lookback: 30,
   mode: "all_regimes",
   selectedRank: 1,
-  currentChart: null,
   analogChart: null,
   resizeObserver: null,
 };
@@ -280,8 +279,6 @@ const elements = {
   currentDate: document.querySelector("#current-date"),
   currentRegime: document.querySelector("#current-regime"),
   lastUpdated: document.querySelector("#last-updated"),
-  currentReturnLabel: document.querySelector("#current-return-label"),
-  currentReturn: document.querySelector("#current-return"),
   statCards: document.querySelector("#stat-cards"),
   selectedMatchCard: document.querySelector("#selected-match-card"),
   similarityBreakdown: document.querySelector("#similarity-breakdown"),
@@ -363,13 +360,6 @@ function getViewData() {
   return getLookbackData()[state.mode];
 }
 
-function setSignedContent(element, value, digits = 1) {
-  element.textContent = formatPercent(value, digits);
-  element.classList.remove("positive", "negative");
-  const className = valueClass(value);
-  if (className) element.classList.add(className);
-}
-
 function baseAxis() {
   return {
     axisLine: { lineStyle: { color: COLORS.grid } },
@@ -387,57 +377,6 @@ function renderHeader() {
   elements.currentRegime.classList.toggle("bear", current.market_regime === "bear");
   elements.lastUpdated.textContent = compactDate(state.data.last_updated);
   elements.dataSource.textContent = `${t("dataSourcePrefix")}: ${localizedDataSource(state.data.data_source)}`;
-}
-
-function renderCurrentChart() {
-  const data = getLookbackData();
-  elements.currentReturnLabel.textContent = t("dayReturn", { days: state.lookback });
-  setSignedContent(elements.currentReturn, data.current_return);
-
-  const values = data.current_pattern;
-  const dates = data.current_dates.map((date) => date.slice(5));
-  state.currentChart.setOption({
-    animationDuration: 350,
-    grid: { left: 54, right: 20, top: 18, bottom: 38 },
-    tooltip: {
-      trigger: "axis",
-      backgroundColor: "#0a1017",
-      borderColor: COLORS.grid,
-      textStyle: { color: COLORS.text, fontFamily: "monospace", fontSize: 11 },
-      formatter: (params) => `${params[0].axisValue}<br/>${t("normalizedLabel")}: <strong>${params[0].value.toFixed(2)}</strong>`,
-    },
-    xAxis: {
-      ...baseAxis(),
-      type: "category",
-      boundaryGap: false,
-      data: dates,
-      axisLabel: { ...baseAxis().axisLabel, interval: Math.max(0, Math.floor(state.lookback / 5) - 1) },
-      splitLine: { show: false },
-    },
-    yAxis: {
-      ...baseAxis(),
-      type: "value",
-      scale: true,
-      axisLabel: { ...baseAxis().axisLabel, formatter: (value) => value.toFixed(1) },
-    },
-    series: [
-      {
-        type: "line",
-        data: values,
-        symbol: "none",
-        smooth: 0.18,
-        lineStyle: { width: 2.5, color: COLORS.cyan },
-        areaStyle: { color: "rgba(59, 212, 231, 0.08)" },
-        markLine: {
-          silent: true,
-          symbol: "none",
-          label: { show: false },
-          lineStyle: { color: "rgba(255,255,255,.11)", type: "dashed" },
-          data: [{ yAxis: 100 }],
-        },
-      },
-    ],
-  }, true);
 }
 
 function renderStats() {
@@ -757,7 +696,6 @@ function renderMatchesTable() {
 
 function renderAll(resetSelection = true) {
   if (resetSelection) state.selectedRank = 1;
-  renderCurrentChart();
   renderStats();
   renderSelectedMatch();
   renderSimilarityBreakdown();
@@ -830,7 +768,6 @@ function bindControls() {
   });
 
   window.addEventListener("resize", () => {
-    state.currentChart?.resize();
     state.analogChart?.resize();
   });
 }
@@ -841,11 +778,9 @@ function observeChartContainers() {
   state.resizeObserver = new ResizeObserver(() => {
     cancelAnimationFrame(frame);
     frame = requestAnimationFrame(() => {
-      state.currentChart?.resize();
       state.analogChart?.resize();
     });
   });
-  state.resizeObserver.observe(document.querySelector("#current-chart"));
   state.resizeObserver.observe(document.querySelector("#analog-chart"));
 }
 
@@ -895,9 +830,7 @@ async function loadData() {
     elements.loading.hidden = true;
     elements.dashboard.hidden = false;
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    state.currentChart ||= echarts.init(document.querySelector("#current-chart"), null, { renderer: "canvas" });
     state.analogChart ||= echarts.init(document.querySelector("#analog-chart"), null, { renderer: "canvas" });
-    state.currentChart.resize();
     state.analogChart.resize();
     observeChartContainers();
     renderAll();

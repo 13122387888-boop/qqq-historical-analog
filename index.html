@@ -24,9 +24,9 @@
     <meta name="twitter:image" content="./og.png" />
     <title>QQQ Historical Analog</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./style.css?v=20260902-4" />
+    <link rel="stylesheet" href="./style.css?v=20260902-5" />
     <script src="./assets/echarts.min.js" defer></script>
-    <script src="./app.js?v=20260902-4" defer></script>
+    <script src="./app.js?v=20260902-5" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content" data-i18n="skipLink">Skip to analysis</a>
@@ -73,9 +73,9 @@
           <span class="control-label" data-i18n="observationWindow">Observation window</span>
           <div id="lookback-selector" class="segmented-control" role="group" aria-label="Lookback window" data-i18n-aria="lookbackAria">
             <button type="button" data-lookback="10" aria-pressed="false">10D</button>
-            <button type="button" data-lookback="15" aria-pressed="true" class="active">15D</button>
+            <button type="button" data-lookback="15" aria-pressed="false">15D</button>
             <button type="button" data-lookback="20" aria-pressed="false">20D</button>
-            <button type="button" data-lookback="30" aria-pressed="false">30D</button>
+            <button type="button" data-lookback="30" aria-pressed="true" class="active">30D</button>
           </div>
         </div>
 
@@ -101,24 +101,6 @@
       </div>
 
       <div id="dashboard" hidden>
-        <section class="overview-grid">
-          <article class="panel current-panel">
-            <div class="panel-heading">
-              <div>
-                <p class="section-kicker" data-i18n="normalizedPricePath">Normalized price path</p>
-                <h2 data-i18n="currentPattern">Current QQQ Pattern</h2>
-              </div>
-              <div class="return-callout">
-                <span id="current-return-label">15D return</span>
-                <strong id="current-return">—</strong>
-              </div>
-            </div>
-            <div id="current-chart" class="chart current-chart" role="img" aria-label="Current QQQ normalized price chart" data-i18n-aria="currentChartAria"></div>
-          </article>
-
-          <section id="stat-cards" class="stat-grid" aria-label="Key forward statistics" data-i18n-aria="statCardsAria"></section>
-        </section>
-
         <section class="panel analog-panel">
           <div class="panel-heading analog-heading">
             <div>
@@ -165,6 +147,8 @@
             </table>
           </div>
         </section>
+
+        <section id="stat-cards" class="stat-grid summary-stat-grid" aria-label="Key forward statistics" data-i18n-aria="statCardsAria"></section>
 
         <div class="content-grid">
           <section class="panel table-panel">

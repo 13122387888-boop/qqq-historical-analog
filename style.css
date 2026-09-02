@@ -423,35 +423,8 @@ tbody tr:focus-visible,
   border-bottom: 1px solid var(--border);
 }
 
-.overview-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(420px, 1fr);
-  gap: 16px;
-}
-
-.return-callout {
-  text-align: right;
-}
-
-.return-callout span {
-  display: block;
-  color: var(--muted);
-  font: 500 10px/1.2 var(--mono);
-  text-transform: uppercase;
-}
-
-.return-callout strong {
-  display: block;
-  margin-top: 4px;
-  font: 600 20px/1 var(--mono);
-}
-
 .chart {
   width: 100%;
-}
-
-.current-chart {
-  height: 242px;
 }
 
 .stat-grid {
@@ -463,6 +436,11 @@ tbody tr:focus-visible,
   overflow: hidden;
   background: var(--border);
   box-shadow: var(--shadow);
+}
+
+.summary-stat-grid {
+  margin-top: 16px;
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .stat-card {
@@ -922,7 +900,6 @@ footer span {
     flex: 1;
   }
 
-  .overview-grid,
   .content-grid {
     grid-template-columns: 1fr;
   }

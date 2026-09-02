@@ -1,0 +1,11 @@
+{
+  "source": "Longbridge Securities (forward-adjusted daily OHLCV fallback)",
+  "price_field": "Adj Close",
+  "price_field_note": "Adj Close copied from forward-adjusted Close because the source has no separate Adj Close field",
+  "adjustment": "Forward-adjusted OHLC",
+  "start_date": "2000-01-03",
+  "end_date": "2026-09-01",
+  "row_count": 6706,
+  "fetched_at": "2026-09-02T08:52:43.108544+00:00",
+  "csv_sha256": "5919ac87569ae96e3e130e12b0e729c1d9f0c0aabf3f3ab8d2c28a573289df91"
+}

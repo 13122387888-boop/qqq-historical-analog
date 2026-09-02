@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#070b10" />
+    <meta
+      name="description"
+      content="Find historically similar QQQ price patterns and examine what happened next."
+    />
+    <meta property="og:title" content="QQQ Historical Analog" />
+    <meta
+      property="og:description"
+      content="Explore historically similar QQQ price patterns and their realized forward outcomes."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="./og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="QQQ Historical Analog" />
+    <meta
+      name="twitter:description"
+      content="Explore historically similar QQQ price patterns and their realized forward outcomes."
+    />
+    <meta name="twitter:image" content="./og.png" />
+    <title>QQQ Historical Analog</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css?v=20260902-4" />
+    <script src="./assets/echarts.min.js" defer></script>
+    <script src="./app.js?v=20260902-4" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content" data-i18n="skipLink">Skip to analysis</a>
+
+    <header class="site-header">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">Q/</div>
+        <div>
+          <p class="eyebrow" data-i18n="eyebrow">Quantitative research tool</p>
+          <h1 data-i18n="siteTitle">QQQ Historical Analog</h1>
+          <p class="subtitle" data-i18n="subtitle">Find historically similar QQQ price patterns and examine what happened next.</p>
+        </div>
+      </div>
+
+      <div class="header-tools">
+        <div class="language-switch" role="group" aria-label="Language" data-i18n-aria="languageAria">
+          <button type="button" data-language="en" aria-pressed="true" class="active">EN</button>
+          <button type="button" data-language="zh" aria-pressed="false">中文</button>
+        </div>
+        <div class="market-strip" aria-label="Current QQQ market summary" data-i18n-aria="marketSummaryAria">
+          <div class="market-item market-price">
+            <span class="meta-label">QQQ</span>
+            <strong id="current-price">—</strong>
+          </div>
+          <div class="market-item">
+            <span class="meta-label" data-i18n="asOf">As of</span>
+            <strong id="current-date">—</strong>
+          </div>
+          <div class="market-item">
+            <span class="meta-label" data-i18n="regime">Regime</span>
+            <strong id="current-regime" class="status-pill">—</strong>
+          </div>
+          <div class="market-item">
+            <span class="meta-label" data-i18n="lastUpdated">Last updated</span>
+            <strong id="last-updated">—</strong>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" class="dashboard-shell">
+      <section class="control-bar" aria-label="Analysis controls" data-i18n-aria="analysisControlsAria">
+        <div class="control-group">
+          <span class="control-label" data-i18n="observationWindow">Observation window</span>
+          <div id="lookback-selector" class="segmented-control" role="group" aria-label="Lookback window" data-i18n-aria="lookbackAria">
+            <button type="button" data-lookback="10" aria-pressed="false">10D</button>
+            <button type="button" data-lookback="15" aria-pressed="true" class="active">15D</button>
+            <button type="button" data-lookback="20" aria-pressed="false">20D</button>
+            <button type="button" data-lookback="30" aria-pressed="false">30D</button>
+          </div>
+        </div>
+
+        <label class="regime-toggle" for="regime-only">
+          <span>
+            <strong data-i18n="sameRegimeOnly">Same Market Regime Only</strong>
+            <small data-i18n="sameRegimeHint">Match Bull/Bear state using the 200-day moving average</small>
+          </span>
+          <input id="regime-only" type="checkbox" />
+          <span class="toggle-track" aria-hidden="true"><span></span></span>
+        </label>
+      </section>
+
+      <div id="loading-state" class="state-panel" role="status">
+        <span class="loader" aria-hidden="true"></span>
+        <span data-i18n="loading">Loading historical analogs…</span>
+      </div>
+
+      <div id="error-state" class="state-panel error-panel" hidden>
+        <strong data-i18n="errorTitle">Could not load the analysis data.</strong>
+        <p data-i18n="errorBody">Start a local server from the project folder, then refresh this page.</p>
+        <button id="retry-button" type="button" data-i18n="retry">Try again</button>
+      </div>
+
+      <div id="dashboard" hidden>
+        <section class="overview-grid">
+          <article class="panel current-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="section-kicker" data-i18n="normalizedPricePath">Normalized price path</p>
+                <h2 data-i18n="currentPattern">Current QQQ Pattern</h2>
+              </div>
+              <div class="return-callout">
+                <span id="current-return-label">15D return</span>
+                <strong id="current-return">—</strong>
+              </div>
+            </div>
+            <div id="current-chart" class="chart current-chart" role="img" aria-label="Current QQQ normalized price chart" data-i18n-aria="currentChartAria"></div>
+          </article>
+
+          <section id="stat-cards" class="stat-grid" aria-label="Key forward statistics" data-i18n-aria="statCardsAria"></section>
+        </section>
+
+        <section class="panel analog-panel">
+          <div class="panel-heading analog-heading">
+            <div>
+              <p class="section-kicker" data-i18n="pastOutcome">Past pattern + realized outcome</p>
+              <h2 data-i18n="historicalAnalogPaths">Historical Analog Paths</h2>
+              <p class="panel-note" data-i18n="analogNote">Current QQQ ends at Day 0. Historical outcomes continue for 30 trading days.</p>
+            </div>
+            <div id="selected-match-card" class="selected-match-card" aria-live="polite"></div>
+          </div>
+          <div id="similarity-breakdown" class="similarity-breakdown" aria-live="polite"></div>
+          <div class="chart-key" aria-hidden="true">
+            <span><i class="key-line current-key"></i><b data-i18n="currentPatternLegend">Current pattern</b></span>
+            <span><i class="key-line analog-key"></i><b data-i18n="historicalAnalogsLegend">Historical analogs</b></span>
+            <span><i class="key-line median-key"></i><b data-i18n="forwardMedianLegend">Forward median</b></span>
+            <span><i class="key-area"></i><b data-i18n="rangeLegend">25–75% range</b></span>
+          </div>
+          <div id="analog-chart" class="chart analog-chart" role="img" aria-label="Historical analog price paths and forward return distribution" data-i18n-aria="analogChartAria"></div>
+        </section>
+
+        <section class="panel matches-panel">
+          <div class="panel-heading compact-heading">
+            <div>
+              <p class="section-kicker" data-i18n="rankedSimilarity">Ranked by blended path similarity</p>
+              <h2 data-i18n="topHistoricalMatches">Top Historical Matches</h2>
+            </div>
+            <span class="sample-note" data-i18n="selectRow">Select a row to highlight its path</span>
+          </div>
+          <div class="table-scroll match-table-scroll">
+            <table class="matches-table">
+              <thead>
+                <tr>
+                  <th data-i18n="rank">Rank</th>
+                  <th data-i18n="period">Period</th>
+                  <th data-i18n="similarity">Similarity</th>
+                  <th data-i18n="regime">Regime</th>
+                  <th>5D</th>
+                  <th>10D</th>
+                  <th>20D</th>
+                  <th>30D</th>
+                  <th data-i18n="maxDrawdown">Max drawdown</th>
+                </tr>
+              </thead>
+              <tbody id="matches-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="content-grid">
+          <section class="panel table-panel">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="section-kicker" data-i18n="outcomeDistribution">Outcome distribution</p>
+                <h2 data-i18n="forwardReturns">Forward Returns</h2>
+              </div>
+              <span class="sample-note" data-i18n="topIndependent">Top independent matches</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th data-i18n="horizon">Horizon</th>
+                    <th data-i18n="upProbability">Up probability</th>
+                    <th data-i18n="average">Average</th>
+                    <th data-i18n="median">Median</th>
+                    <th data-i18n="best">Best</th>
+                    <th data-i18n="worst">Worst</th>
+                  </tr>
+                </thead>
+                <tbody id="returns-table-body"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel consensus-panel">
+            <div class="panel-heading compact-heading">
+              <div>
+                <p class="section-kicker" data-i18n="acrossWindows">Across observation windows</p>
+                <h2 data-i18n="historicalConsensus">Historical Consensus</h2>
+              </div>
+              <span id="overall-consensus" class="consensus-overall">—</span>
+            </div>
+            <div id="consensus-grid" class="consensus-grid"></div>
+            <p class="consensus-footnote" data-i18n="consensusFootnote">Based on each window's historical 20D outcomes—not a price prediction.</p>
+          </section>
+        </div>
+
+        <section class="method-strip" aria-label="Methodology summary" data-i18n-aria="methodologyAria">
+          <div>
+            <span class="method-index">70</span>
+            <p><strong data-i18n="pricePath">Price path</strong><br /><span data-i18n="normalizedRmseWeight">Normalized-path RMSE weight</span></p>
+          </div>
+          <div>
+            <span class="method-index">30</span>
+            <p><strong data-i18n="dailyReturns">Daily returns</strong><br /><span data-i18n="returnRmseWeight">Return-path RMSE weight</span></p>
+          </div>
+          <div>
+            <span class="method-index">±20</span>
+            <p><strong data-i18n="tradingDays">Trading days</strong><br /><span data-i18n="minSeparation">Minimum analog separation</span></p>
+          </div>
+          <div>
+            <span class="method-index">30D</span>
+            <p><strong data-i18n="forwardWindow">Forward window</strong><br /><span data-i18n="realizedOnly">Realized outcomes only</span></p>
+          </div>
+        </section>
+
+        <section class="panel provenance-panel">
+          <div class="panel-heading compact-heading">
+            <div>
+              <p class="section-kicker" data-i18n="auditTrail">Audit trail</p>
+              <h2 data-i18n="dataProvenance">Data Provenance</h2>
+            </div>
+            <span id="algorithm-version" class="sample-note">—</span>
+          </div>
+          <dl id="provenance-grid" class="provenance-grid"></dl>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <p data-i18n="disclaimer">Historical similarity does not imply future performance. This tool is for research and educational purposes only and does not constitute investment advice.</p>
+      <span id="data-source">Data source: —</span>
+    </footer>
+  </body>
+</html>

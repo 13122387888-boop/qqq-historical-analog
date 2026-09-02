@@ -136,6 +136,20 @@ const I18N = {
     verdict_validated_edge: "Validated edge",
     verdict_promising_not_conclusive: "Promising, not conclusive",
     verdict_no_observed_edge: "No observed edge",
+    prospectiveValidation: "Prospective validation",
+    shadowChallenger: "Shadow Challenger",
+    shadowNote: "Frozen research model; it does not affect the official outlook.",
+    shadowWaiting: "Waiting for outcomes",
+    shadowReview: "Eligible for review",
+    shadowIssued: "Forecast issued",
+    latestObservationOnly: "Latest observation only",
+    shadowRiskTarget: "30D ≥3% drawdown",
+    challengerProbability: "Challenger probability",
+    shadowBaseline: "Regime baseline",
+    sameRegimeHistory: "Same-MA200-regime history",
+    shadowEvidence: "Forward evidence",
+    shadowEvidenceCount: "{matured} matured · {pending} pending",
+    shadowPromotionGate: "Minimum {count} matured forecasts + positive 95% CI",
     methodologyAndAudit: "Methodology and audit",
     notesDataTitle: "Data convention",
     notesDataBody: "QQQ daily data from {source}; {field} is used with {adjustment}. Coverage: {start} to {end}, {rows} trading days.",
@@ -149,6 +163,8 @@ const I18N = {
     notesBacktestBody: "Forecasts are generated every trading day from {backtestStart} to {backtestEnd}. The development period ends in 2022; {holdout} is shown as the retrospective holdout. Overlapping forecasts are retained, so 95% uncertainty uses a {block}-day moving-block bootstrap.",
     notesMetricsTitle: "How to read the metrics",
     notesMetricsBody: "Brier score evaluates probability accuracy and is better when lower. Brier skill above 0% means the analog model beats the point-in-time probability for the same MA200 regime. Hit rate is secondary and does not measure calibration.",
+    notesShadowTitle: "Prospective shadow test",
+    notesShadowBody: "The frozen challenger estimates the chance of a 3% peak-to-trough drawdown within 30 trading days. It began on {shadowStart}; {shadowMatured} forecasts have matured and {shadowPending} remain pending. It never changes the official outlook automatically and is reviewed only after at least {shadowMinimum} matured forecasts with a positive 95% block-bootstrap lower bound.",
     notesAuditTitle: "Interpretation boundary",
     notesAuditBody: "The no-look-ahead audit verifies data isolation; the backtest measures historical predictive value. V2 was selected without using the 2023+ holdout, but its small holdout improvement is not statistically conclusive and does not guarantee future performance.",
     optimizedV2Weight: "Optimized V2 weight",
@@ -292,6 +308,20 @@ const I18N = {
     verdict_validated_edge: "优势通过检验",
     verdict_promising_not_conclusive: "有改善但证据不足",
     verdict_no_observed_edge: "暂未观察到优势",
+    prospectiveValidation: "前向验证",
+    shadowChallenger: "影子挑战模型",
+    shadowNote: "参数已经冻结，仅用于积累研究证据，不影响正式结论。",
+    shadowWaiting: "等待结果成熟",
+    shadowReview: "可以进入复核",
+    shadowIssued: "预测登记日",
+    latestObservationOnly: "只登记最新观测，不回填",
+    shadowRiskTarget: "30日内≥3%回撤",
+    challengerProbability: "挑战模型概率",
+    shadowBaseline: "市场环境基准",
+    sameRegimeHistory: "同MA200环境历史统计",
+    shadowEvidence: "前向证据",
+    shadowEvidenceCount: "已成熟 {matured} · 待验证 {pending}",
+    shadowPromotionGate: "至少{count}条成熟预测，且95%置信区间下界大于零",
     methodologyAndAudit: "方法与审计说明",
     notesDataTitle: "数据口径",
     notesDataBody: "QQQ 日线来自 {source}；使用 {field}，复权方式为{adjustment}。覆盖 {start} 至 {end}，共 {rows} 个交易日。",
@@ -305,6 +335,8 @@ const I18N = {
     notesBacktestBody: "从 {backtestStart} 至 {backtestEnd} 的每个交易日生成预测；开发期截至2022年，{holdout}作为回溯式留出期展示。相邻预测存在重叠，因此95%不确定性采用{block}日移动区块自助法估计。",
     notesMetricsTitle: "指标怎么读",
     notesMetricsBody: "Brier 分数衡量概率准确度，越低越好；Brier 提升高于0%表示相似模型优于当时同MA200市场环境的基础上涨概率。方向命中率只是辅助指标，不能衡量概率校准。",
+    notesShadowTitle: "影子前向检验",
+    notesShadowBody: "冻结的挑战模型估计未来30个交易日内出现3%峰谷回撤的概率。检验始于{shadowStart}；当前已有{shadowMatured}条预测成熟，{shadowPending}条等待结果。它不会自动改变正式结论，只有至少{shadowMinimum}条预测成熟且区块自助法95%置信区间下界大于零时，才进入人工复核。",
     notesAuditTitle: "结论边界",
     notesAuditBody: "无前视审计验证数据隔离，滚动回测检验历史预测价值。V2选参没有使用2023年后的留出期，但留出期改善很小且统计证据不足，也不保证未来表现。",
     optimizedV2Weight: "V2优化权重",
@@ -329,6 +361,7 @@ const state = {
   data: null,
   backtest: null,
   v2: null,
+  shadow: null,
   language: initialLanguage(),
   lookback: 30,
   mode: "all_regimes",
@@ -383,6 +416,13 @@ const elements = {
   backtestPeriod: document.querySelector("#backtest-period"),
   backtestSummary: document.querySelector("#backtest-summary"),
   backtestTable: document.querySelector("#backtest-table-body"),
+  shadowPanel: document.querySelector("#shadow-panel"),
+  shadowStatus: document.querySelector("#shadow-status"),
+  shadowIssuedDate: document.querySelector("#shadow-issued-date"),
+  shadowRiskProbability: document.querySelector("#shadow-risk-probability"),
+  shadowBaselineProbability: document.querySelector("#shadow-baseline-probability"),
+  shadowEvidenceCount: document.querySelector("#shadow-evidence-count"),
+  shadowPromotionGate: document.querySelector("#shadow-promotion-gate"),
   methodPriceWeight: document.querySelector("#method-price-weight"),
   methodReturnWeight: document.querySelector("#method-return-weight"),
   methodRegimeWeight: document.querySelector("#method-regime-weight"),
@@ -645,6 +685,30 @@ function renderBacktest() {
     .join("");
 }
 
+function renderShadowValidation() {
+  const shadow = state.shadow;
+  const latest = shadow?.records?.at(-1);
+  const evaluation = shadow?.evaluation;
+  if (!shadow || !latest || !evaluation) {
+    elements.shadowPanel.hidden = true;
+    return;
+  }
+  const reviewEligible = evaluation.promotion_status === "eligible_for_model_review";
+  elements.shadowPanel.hidden = false;
+  elements.shadowStatus.textContent = t(reviewEligible ? "shadowReview" : "shadowWaiting");
+  elements.shadowStatus.className = `shadow-status ${reviewEligible ? "review" : "pending"}`;
+  elements.shadowIssuedDate.textContent = compactDate(latest.forecast_date);
+  elements.shadowRiskProbability.textContent = formatPercent(latest.challenger_probability, 0, false);
+  elements.shadowBaselineProbability.textContent = formatPercent(latest.baseline_probability, 0, false);
+  elements.shadowEvidenceCount.textContent = t("shadowEvidenceCount", {
+    matured: evaluation.matured_forecasts,
+    pending: evaluation.pending_forecasts,
+  });
+  elements.shadowPromotionGate.textContent = t("shadowPromotionGate", {
+    count: evaluation.minimum_matured_forecasts,
+  });
+}
+
 function renderMethodology() {
   const champion = getV2Selection()?.champion;
   if (!champion) return;
@@ -663,6 +727,8 @@ function renderDataNotes() {
   const champion = selection?.champion;
   const profile = champion?.profile || { price_weight: 0.7, return_weight: 0.3, regime_weight: 0 };
   const alpha20 = selection?.horizon_calibration?.["20d"]?.alpha ?? 0;
+  const shadowEvaluation = state.shadow?.evaluation || {};
+  const shadowStart = state.shadow?.records?.[0]?.forecast_date || "—";
   const variables = {
     source: localizedDataSource(provenance.source || state.data.data_source || "—"),
     field: provenance.price_field || "—",
@@ -681,6 +747,10 @@ function renderDataNotes() {
     topK: champion?.top_k || 20,
     kernel: t(champion?.kernel === "distance" ? "distanceWeighted" : "equalWeighted"),
     alpha: Math.round(alpha20 * 100),
+    shadowStart,
+    shadowMatured: shadowEvaluation.matured_forecasts ?? 0,
+    shadowPending: shadowEvaluation.pending_forecasts ?? 0,
+    shadowMinimum: shadowEvaluation.minimum_matured_forecasts ?? 252,
   };
   const sections = [
     ["notesDataTitle", "notesDataBody"],
@@ -689,6 +759,7 @@ function renderDataNotes() {
     ["notesPointInTimeTitle", "notesPointInTimeBody"],
     ["notesBacktestTitle", "notesBacktestBody"],
     ["notesMetricsTitle", "notesMetricsBody"],
+    ["notesShadowTitle", "notesShadowBody"],
     ["notesAuditTitle", "notesAuditBody"],
   ];
   elements.dataNotesBody.innerHTML = sections
@@ -957,6 +1028,7 @@ function renderAll(resetSelection = true) {
   renderConsensus();
   renderMatchesTable();
   renderBacktest();
+  renderShadowValidation();
   renderMethodology();
   renderProvenance();
   renderDataNotes();
@@ -1091,18 +1163,20 @@ async function loadData() {
   elements.error.hidden = true;
   elements.dashboard.hidden = true;
   try {
-    const [analysisResponse, backtestResponse, v2Response] = await Promise.all([
+    const [analysisResponse, backtestResponse, v2Response, shadowResponse] = await Promise.all([
       fetch("./data/analogs.json", { cache: "no-store" }),
       fetch("./data/backtest.json", { cache: "no-store" }),
       fetch("./data/v2_model.json", { cache: "no-store" }),
+      fetch("./data/shadow_validation.json", { cache: "no-store" }).catch(() => null),
     ]);
     if (!analysisResponse.ok) throw new Error(`Analysis data HTTP ${analysisResponse.status}`);
     if (!backtestResponse.ok) throw new Error(`Backtest data HTTP ${backtestResponse.status}`);
     if (!v2Response.ok) throw new Error(`V2 model HTTP ${v2Response.status}`);
-    [state.data, state.backtest, state.v2] = await Promise.all([
+    [state.data, state.backtest, state.v2, state.shadow] = await Promise.all([
       analysisResponse.json(),
       backtestResponse.json(),
       v2Response.json(),
+      shadowResponse?.ok ? shadowResponse.json() : Promise.resolve(null),
     ]);
     if (!window.echarts) throw new Error("ECharts failed to load.");
     renderHeader();

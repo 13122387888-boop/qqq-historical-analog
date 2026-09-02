@@ -20,13 +20,15 @@ qqq-historical-analog/
 │   ├── source.json           # 数据来源、复权方式与 CSV 指纹
 │   ├── walk_forward_validation.json # 多历史时点无前视校验报告
 │   ├── backtest.json         # V1逐日滚动预测回测、基准与可靠性指标
-│   └── v2_model.json         # V2选参、留出检验、当前预测与展示案例
+│   ├── v2_model.json         # V2选参、留出检验、当前预测与展示案例
+│   └── shadow_validation.json # 冻结挑战模型的前向预测账本
 ├── scripts/
 │   ├── fetch_data.py         # 下载、清洗并保存日线
 │   ├── calculate_analogs.py  # 相似度、去重、未来表现和统计
 │   ├── validate_walk_forward.py # 滚动时点无前视审计
 │   ├── backtest_walk_forward.py # V1 逐日滚动预测效果回测
-│   └── optimize_similarity_v2.py # V2开发期选参、概率收缩与留出检验
+│   ├── optimize_similarity_v2.py # V2开发期选参、概率收缩与留出检验
+│   └── update_shadow_validation.py # 登记并结算影子前向预测
 ├── tests/
 │   └── test_calculate_analogs.py
 ├── requirements.txt
@@ -81,6 +83,12 @@ calibrated_probability = regime_probability
 
 页面另外使用“证据门槛”约束方向性结论：只有留出期相对市场环境基准的 Brier 优势经移动区块自助法确认（95%区间下限高于0），才显示看多或看空；否则显示“证据不足”。概率卡同时拆分市场环境基础概率与相似行情增量，避免把市场长期上涨倾向误读成相似模型的独立预测能力。
 
+## 影子前向验证
+
+研究阶段发现“未来30个交易日内出现至少3%峰谷回撤”的内部状态模型值得继续观察，但历史置信区间仍跨过零，因此它不会进入正式结论。`update_shadow_validation.py` 已将模型结构冻结，并从最新观测日开始维护独立预测账本。
+
+脚本每次只登记 `qqq.csv` 中最新日期的一条预测，不补录遗漏日期；已有预测在出现30个新交易日后自动结算。模型不会在影子期重新拟合，也不会自动升级。只有至少252条预测成熟，并且相对同MA200市场环境基准的Brier优势95%移动区块自助区间下界大于0时，才标记为可以人工复核。
+
 ## 安装与生成数据
 
 建议使用 Python 3.10+。
@@ -92,6 +100,7 @@ python scripts/calculate_analogs.py
 python scripts/validate_walk_forward.py
 python scripts/backtest_walk_forward.py
 python scripts/optimize_similarity_v2.py
+python scripts/update_shadow_validation.py
 ```
 
 第一条命令会输出 `data/qqq.csv` 和 `data/source.json`，第二条命令会输出 `data/analogs.json`。第三条命令通过“污染截止日后的数据”验证未来价格不会改变当时可见的匹配结果，报告写入 `data/walk_forward_validation.json`。第四条命令生成V1完整逐日预测回测并写入 `data/backtest.json`。第五条只用开发期选择V2参数、执行每日留出检验并输出 `data/v2_model.json`。
@@ -102,7 +111,7 @@ python scripts/optimize_similarity_v2.py
 python -m unittest discover -s tests -v
 ```
 
-测试会检查归一化公式、未来价格不影响相似度、±20 交易日去重、每个结果都有完整 30D 未来路径、数据来源指纹、滚动无前视报告，以及四个窗口和两种 Regime 模式的数据契约。
+测试会检查归一化公式、未来价格不影响相似度、±20 交易日去重、每个结果都有完整 30D 未来路径、数据来源指纹、滚动无前视报告、四个窗口和两种 Regime 模式的数据契约，以及影子账本的冻结、幂等登记和30交易日结算规则。
 
 ## 本地启动
 
@@ -129,11 +138,11 @@ http://localhost:8000
 5. 选择 `main` 与 `/(root)`，保存。
 6. 等待 Pages 发布完成后访问 GitHub 提供的网址。
 
-项目全部使用相对路径，并包含 `.nojekyll`，因此不需要额外构建步骤。每次更新行情后，重新运行上述五个 Python 脚本，并提交 `data/qqq.csv`、`data/analogs.json`、`data/source.json`、`data/walk_forward_validation.json`、`data/backtest.json` 和 `data/v2_model.json` 即可。
+项目全部使用相对路径，并包含 `.nojekyll`，因此不需要额外构建步骤。每次更新行情后，重新运行上述六个 Python 脚本，并提交 `data/qqq.csv`、`data/analogs.json`、`data/source.json`、`data/walk_forward_validation.json`、`data/backtest.json`、`data/v2_model.json` 和 `data/shadow_validation.json` 即可。
 
 ## 第一版边界
 
 - 仅分析 QQQ Adj Close（不可用时使用 Close）。
 - Regime 仅按 Price > MA200 判定 Bull，否则 Bear。
-- 不使用 RSI、MACD、VIX、宏观数据、新闻、期权或机器学习。
+- 正式V2不使用 RSI、MACD、VIX、宏观数据、新闻、期权或机器学习；影子挑战模型仅使用QQQ自身的均线位置、历史波动率和近期回撤。
 - Historical Consensus 只是四个观察窗口的历史结果汇总，不是预测或目标价。

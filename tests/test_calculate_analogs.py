@@ -16,6 +16,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 import calculate_analogs as analogs  # noqa: E402
 import backtest_walk_forward as backtest  # noqa: E402
 import optimize_similarity_v2 as optimizer  # noqa: E402
+import update_shadow_validation as shadow  # noqa: E402
 
 
 class AlgorithmTests(unittest.TestCase):
@@ -170,6 +171,57 @@ class GeneratedOutputTests(unittest.TestCase):
             app_source,
         )
         self.assertIn('signal_inconclusive: "Inconclusive"', app_source)
+
+    def test_shadow_challenger_is_prospective_and_separate(self) -> None:
+        report_path = PROJECT_ROOT / "data" / "shadow_validation.json"
+        self.assertTrue(report_path.exists())
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        self.assertEqual(report["status"], "shadow_only")
+        self.assertFalse(report["promotion_policy"]["automatic_promotion"])
+        self.assertIn("never backfill", report["issuance_policy"])
+        self.assertEqual(report["frozen_model"]["model_version"], shadow.MODEL_VERSION)
+        self.assertEqual(report["frozen_model"]["event_threshold"], shadow.EVENT_THRESHOLD)
+        self.assertEqual(report["evaluation"]["matured_forecasts"], 0)
+        self.assertEqual(report["evaluation"]["pending_forecasts"], 1)
+        self.assertEqual(len(report["records"]), 1)
+        record = report["records"][0]
+        self.assertEqual(record["forecast_date"], self.prices.iloc[-1]["Date"])
+        self.assertEqual(record["status"], "pending")
+        self.assertGreaterEqual(record["challenger_probability"], 0)
+        self.assertLessEqual(record["challenger_probability"], 1)
+        self.assertEqual(
+            report["source_data"]["csv_sha256"],
+            hashlib.sha256((PROJECT_ROOT / "data" / "qqq.csv").read_bytes()).hexdigest(),
+        )
+
+    def test_shadow_issuance_is_idempotent_for_the_latest_date(self) -> None:
+        report = json.loads(
+            (PROJECT_ROOT / "data" / "shadow_validation.json").read_text(encoding="utf-8")
+        )
+        frame = shadow.load_frame()
+        report["records"] = []
+        self.assertTrue(shadow.issue_latest_forecast(report, frame))
+        self.assertFalse(shadow.issue_latest_forecast(report, frame))
+        self.assertEqual(len(report["records"]), 1)
+
+    def test_shadow_settlement_uses_exactly_thirty_future_trading_days(self) -> None:
+        dates = pd.bdate_range("2026-01-02", periods=31)
+        prices = np.full(31, 100.0)
+        prices[15] = 95.0
+        frame = pd.DataFrame({"Date": dates, "Price": prices})
+        records = [
+            {
+                "forecast_date": dates[0].strftime("%Y-%m-%d"),
+                "status": "pending",
+                "challenger_probability": 0.7,
+                "baseline_probability": 0.6,
+            }
+        ]
+        shadow.settle_records(records, frame)
+        self.assertEqual(records[0]["status"], "matured")
+        self.assertEqual(records[0]["target_end_date"], dates[30].strftime("%Y-%m-%d"))
+        self.assertTrue(records[0]["event_occurred"])
+        self.assertAlmostEqual(records[0]["realized_max_drawdown"], -0.05)
 
 
 if __name__ == "__main__":

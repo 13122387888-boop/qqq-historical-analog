@@ -24,9 +24,9 @@
     <meta name="twitter:image" content="./og.png" />
     <title>QQQ Historical Analog</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./style.css?v=20260902-8" />
+    <link rel="stylesheet" href="./style.css?v=20260902-9" />
     <script src="./assets/echarts.min.js" defer></script>
-    <script src="./app.js?v=20260902-8" defer></script>
+    <script src="./app.js?v=20260902-9" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content" data-i18n="skipLink">Skip to analysis</a>
@@ -179,6 +179,39 @@
               </thead>
               <tbody id="backtest-table-body"></tbody>
             </table>
+          </div>
+        </section>
+
+        <section id="shadow-panel" class="panel shadow-panel" hidden>
+          <div class="panel-heading compact-heading">
+            <div>
+              <p class="section-kicker" data-i18n="prospectiveValidation">Prospective validation</p>
+              <h2 data-i18n="shadowChallenger">Shadow Challenger</h2>
+              <p class="panel-note" data-i18n="shadowNote">Frozen research model; it does not affect the official outlook.</p>
+            </div>
+            <span id="shadow-status" class="shadow-status pending">—</span>
+          </div>
+          <div class="shadow-grid">
+            <article>
+              <span data-i18n="shadowIssued">Forecast issued</span>
+              <strong id="shadow-issued-date">—</strong>
+              <small data-i18n="latestObservationOnly">Latest observation only</small>
+            </article>
+            <article>
+              <span data-i18n="shadowRiskTarget">30D ≥3% drawdown</span>
+              <strong id="shadow-risk-probability">—</strong>
+              <small data-i18n="challengerProbability">Challenger probability</small>
+            </article>
+            <article>
+              <span data-i18n="shadowBaseline">Regime baseline</span>
+              <strong id="shadow-baseline-probability">—</strong>
+              <small data-i18n="sameRegimeHistory">Same-MA200-regime history</small>
+            </article>
+            <article>
+              <span data-i18n="shadowEvidence">Forward evidence</span>
+              <strong id="shadow-evidence-count">—</strong>
+              <small id="shadow-promotion-gate">—</small>
+            </article>
           </div>
         </section>
 

@@ -163,6 +163,14 @@ class GeneratedOutputTests(unittest.TestCase):
                     holdout = selection["backtest"][f"{horizon}d"]["holdout"]
                     self.assertGreater(holdout["sample_count"], 0)
 
+    def test_ui_requires_validated_holdout_edge_for_directional_labels(self) -> None:
+        app_source = (PROJECT_ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn(
+            'selection.backtest?.["20d"]?.holdout?.verdict === "validated_edge"',
+            app_source,
+        )
+        self.assertIn('signal_inconclusive: "Inconclusive"', app_source)
+
 
 if __name__ == "__main__":
     unittest.main()

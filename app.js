@@ -45,8 +45,8 @@ const I18N = {
     best: "Best",
     worst: "Worst",
     acrossWindows: "Across observation windows",
-    historicalConsensus: "Historical Consensus",
-    consensusFootnote: "V2 calibrated 20D probabilities; weak analog evidence shrinks toward the regime base rate.",
+    historicalConsensus: "Evidence-gated Outlook",
+    consensusFootnote: "A direction is shown only when holdout Brier advantage is statistically validated; otherwise the result is inconclusive.",
     rankedSimilarity: "Ranked by development-selected V2 similarity",
     topHistoricalMatches: "Top Historical Matches",
     selectRow: "Select a row to highlight its path",
@@ -73,6 +73,7 @@ const I18N = {
     upProbability20: "20D Up Probability",
     calibratedUpProbability20: "20D Calibrated Up Probability",
     analogEvidenceDetail: "{weight}% analog evidence · ESS {ess}",
+    calibratedProbabilityDetail: "Regime base {base} · analog edge {edge} · evidence {weight}% · ESS {ess}",
     medianReturn20: "20D Median Return",
     medianReturn30: "30D Median Return",
     medianMaxDrawdown: "Median Max Drawdown",
@@ -99,6 +100,7 @@ const I18N = {
     signal_bearish: "Bearish",
     signal_neutral: "Neutral",
     signal_mixed: "Mixed",
+    signal_inconclusive: "Inconclusive",
     similarityBreakdown: "Similarity breakdown",
     blendedWeightNote: "V2 weights: {price}% path · {returns}% returns · {regime}% state",
     priceSimilarity: "Price-path similarity",
@@ -130,7 +132,7 @@ const I18N = {
     brierSkill: "Brier skill",
     hitRate: "Hit rate",
     evidence: "Evidence",
-    horizonsBeatBaseline: "{count}/4 horizons beat the regime baseline",
+    horizonsBeatBaseline: "{count}/4 horizons have validated analog edge",
     verdict_validated_edge: "Validated edge",
     verdict_promising_not_conclusive: "Promising, not conclusive",
     verdict_no_observed_edge: "No observed edge",
@@ -199,8 +201,8 @@ const I18N = {
     best: "最好",
     worst: "最差",
     acrossWindows: "多观察窗口对比",
-    historicalConsensus: "历史共识",
-    consensusFootnote: "V2校准后的20日概率；相似证据较弱时会向市场环境基础概率收缩。",
+    historicalConsensus: "证据门槛结论",
+    consensusFootnote: "只有留出期 Brier 优势通过统计检验才显示方向，否则统一标为证据不足。",
     rankedSimilarity: "按开发期选出的V2相似度排序",
     topHistoricalMatches: "最相似历史行情",
     selectRow: "点击一行可在图中高亮对应路径",
@@ -227,6 +229,7 @@ const I18N = {
     upProbability20: "20日上涨比例",
     calibratedUpProbability20: "20日校准后上涨概率",
     analogEvidenceDetail: "相似行情证据权重 {weight}% · 有效样本 {ess}",
+    calibratedProbabilityDetail: "市场环境基础 {base} · 相似增量 {edge} · 证据权重 {weight}% · 有效样本 {ess}",
     medianReturn20: "20日中位数收益",
     medianReturn30: "30日中位数收益",
     medianMaxDrawdown: "最大回撤中位数",
@@ -253,6 +256,7 @@ const I18N = {
     signal_bearish: "看空",
     signal_neutral: "中性",
     signal_mixed: "分歧",
+    signal_inconclusive: "证据不足",
     similarityBreakdown: "相似度分解",
     blendedWeightNote: "V2权重：价格{price}% · 收益{returns}% · 环境{regime}%",
     priceSimilarity: "价格路径相似度",
@@ -284,7 +288,7 @@ const I18N = {
     brierSkill: "Brier 提升",
     hitRate: "方向命中率",
     evidence: "证据判断",
-    horizonsBeatBaseline: "{count}/4 个周期优于市场环境基准",
+    horizonsBeatBaseline: "{count}/4 个周期的相似增量通过检验",
     verdict_validated_edge: "优势通过检验",
     verdict_promising_not_conclusive: "有改善但证据不足",
     verdict_no_observed_edge: "暂未观察到优势",
@@ -497,7 +501,9 @@ function renderStats() {
       label: t(calibrated20 ? "calibratedUpProbability20" : "upProbability20"),
       value: formatPercent(calibrated20?.calibrated_probability ?? stats["20d"].up_probability, 0, false),
       detail: calibrated20
-        ? t("analogEvidenceDetail", {
+        ? t("calibratedProbabilityDetail", {
+            base: formatPercent(calibrated20.regime_probability, 0, false),
+            edge: `${calibrated20.calibrated_probability >= calibrated20.regime_probability ? "+" : ""}${((calibrated20.calibrated_probability - calibrated20.regime_probability) * 100).toFixed(1)}pp`,
             weight: Math.round(calibrated20.analog_evidence_weight * 100),
             ess: v2Forecast.effective_sample_size.toFixed(1),
           })
@@ -615,7 +621,7 @@ function renderBacktest() {
     v1: v1Result[`${horizon}d`].holdout,
     v2: v2Result[`${horizon}d`].holdout,
   }));
-  const positiveCount = holdoutRows.filter((row) => row.v2.brier_skill_vs_regime > 0).length;
+  const positiveCount = holdoutRows.filter((row) => row.v2.verdict === "validated_edge").length;
   const setup = state.v2.selection_policy || state.backtest.setup || {};
   elements.backtestPanel.hidden = false;
   elements.backtestPeriod.textContent = (setup.holdout_period || "—").replace(" to ", " → ");
@@ -865,7 +871,14 @@ function renderConsensus() {
       const selection = getV2Selection(lookback, state.mode);
       const forecast = selection.current_forecast.horizons["20d"];
       const probability = forecast.calibrated_probability;
-      const signal = probability >= 0.6 ? "bullish" : probability < 0.4 ? "bearish" : "neutral";
+      const validated = selection.backtest?.["20d"]?.holdout?.verdict === "validated_edge";
+      const signal = validated
+        ? probability >= 0.6
+          ? "bullish"
+          : probability < 0.4
+            ? "bearish"
+            : "neutral"
+        : "inconclusive";
       labels.push(signal);
       windows[String(lookback)] = {
         signal,
@@ -874,7 +887,9 @@ function renderConsensus() {
       };
     }
     consensus = {
-      overall: labels.filter((label) => label === "bullish").length >= 3
+      overall: labels.every((label) => label === "inconclusive")
+        ? "inconclusive"
+        : labels.filter((label) => label === "bullish").length >= 3
         ? "bullish"
         : labels.filter((label) => label === "bearish").length >= 3
           ? "bearish"

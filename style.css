@@ -789,7 +789,8 @@ tbody tr:last-child td {
   text-transform: uppercase;
 }
 
-.consensus-item .signal-neutral {
+.consensus-item .signal-neutral,
+.consensus-item .signal-inconclusive {
   background: rgba(184, 196, 204, 0.1);
   color: var(--neutral);
 }
@@ -815,7 +816,8 @@ tbody tr:last-child td {
 }
 
 .consensus-overall.mixed,
-.consensus-overall.neutral {
+.consensus-overall.neutral,
+.consensus-overall.inconclusive {
   border-color: var(--border-strong);
   background: rgba(184, 196, 204, 0.08);
   color: var(--neutral);

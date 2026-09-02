@@ -24,9 +24,9 @@
     <meta name="twitter:image" content="./og.png" />
     <title>QQQ Historical Analog</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./style.css?v=20260902-5" />
+    <link rel="stylesheet" href="./style.css?v=20260902-6" />
     <script src="./assets/echarts.min.js" defer></script>
-    <script src="./app.js?v=20260902-5" defer></script>
+    <script src="./app.js?v=20260902-6" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content" data-i18n="skipLink">Skip to analysis</a>
@@ -42,9 +42,12 @@
       </div>
 
       <div class="header-tools">
-        <div class="language-switch" role="group" aria-label="Language" data-i18n-aria="languageAria">
-          <button type="button" data-language="en" aria-pressed="true" class="active">EN</button>
-          <button type="button" data-language="zh" aria-pressed="false">中文</button>
+        <div class="header-actions">
+          <button id="data-notes-button" class="data-notes-button" type="button" data-i18n="dataNotes">Data notes</button>
+          <div class="language-switch" role="group" aria-label="Language" data-i18n-aria="languageAria">
+            <button type="button" data-language="en" aria-pressed="true" class="active">EN</button>
+            <button type="button" data-language="zh" aria-pressed="false">中文</button>
+          </div>
         </div>
         <div class="market-strip" aria-label="Current QQQ market summary" data-i18n-aria="marketSummaryAria">
           <div class="market-item market-price">
@@ -150,6 +153,35 @@
 
         <section id="stat-cards" class="stat-grid summary-stat-grid" aria-label="Key forward statistics" data-i18n-aria="statCardsAria"></section>
 
+        <section id="backtest-panel" class="panel backtest-panel" hidden>
+          <div class="panel-heading compact-heading">
+            <div>
+              <p class="section-kicker" data-i18n="modelValidation">Point-in-time model validation</p>
+              <h2 data-i18n="walkForwardBacktest">Walk-forward Backtest</h2>
+              <p class="panel-note" data-i18n="backtestNote">Retrospective holdout test of the unchanged V1 model. Lower Brier score is better.</p>
+            </div>
+            <div class="backtest-heading-meta">
+              <span id="backtest-period" class="sample-note">—</span>
+              <span id="backtest-summary" class="backtest-summary">—</span>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="backtest-table">
+              <thead>
+                <tr>
+                  <th data-i18n="horizon">Horizon</th>
+                  <th data-i18n="analogBrier">Analog Brier</th>
+                  <th data-i18n="regimeBaseline">Regime baseline</th>
+                  <th data-i18n="brierSkill">Brier skill</th>
+                  <th data-i18n="hitRate">Hit rate</th>
+                  <th data-i18n="evidence">Evidence</th>
+                </tr>
+              </thead>
+              <tbody id="backtest-table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
         <div class="content-grid">
           <section class="panel table-panel">
             <div class="panel-heading compact-heading">
@@ -220,6 +252,17 @@
         </section>
       </div>
     </main>
+
+    <dialog id="data-notes-dialog" class="data-notes-dialog" aria-labelledby="data-notes-title">
+      <div class="dialog-heading">
+        <div>
+          <p class="section-kicker" data-i18n="methodologyAndAudit">Methodology and audit</p>
+          <h2 id="data-notes-title" data-i18n="dataNotes">Data notes</h2>
+        </div>
+        <button id="data-notes-close" class="dialog-close" type="button" aria-label="Close" data-i18n-aria="closeDialog">×</button>
+      </div>
+      <div id="data-notes-body" class="data-notes-body"></div>
+    </dialog>
 
     <footer>
       <p data-i18n="disclaimer">Historical similarity does not imply future performance. This tool is for research and educational purposes only and does not constitute investment advice.</p>

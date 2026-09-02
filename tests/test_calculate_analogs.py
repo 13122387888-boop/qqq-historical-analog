@@ -14,6 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 import calculate_analogs as analogs  # noqa: E402
+import backtest_walk_forward as backtest  # noqa: E402
 
 
 class AlgorithmTests(unittest.TestCase):
@@ -54,6 +55,12 @@ class AlgorithmTests(unittest.TestCase):
         ]
         selected = analogs.select_independent_matches(candidates)
         self.assertEqual([item["end_index"] for item in selected], [100, 121, 142])
+
+    def test_backtest_selection_matches_v1_separation_rule(self) -> None:
+        scores = np.arange(25.0, 0.0, -1.0)
+        end_indices = 100 + np.arange(25) * 21
+        positions = backtest.select_match_positions(scores, end_indices)
+        self.assertEqual(positions.tolist(), list(range(analogs.TOP_MATCHES)))
 
 
 class GeneratedOutputTests(unittest.TestCase):
@@ -101,6 +108,27 @@ class GeneratedOutputTests(unittest.TestCase):
         for checkpoint in report["checkpoints"]:
             self.assertTrue(checkpoint["future_mutation_invariant"])
             self.assertTrue(checkpoint["all_matches_have_known_30d_forward_data"])
+
+    def test_predictive_backtest_contract(self) -> None:
+        report_path = PROJECT_ROOT / "data" / "backtest.json"
+        self.assertTrue(report_path.exists())
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        self.assertEqual(report["status"], "completed")
+        self.assertEqual(report["algorithm_version"], analogs.ALGORITHM_VERSION)
+        self.assertEqual(report["setup"]["known_outcome_lag_days"], analogs.FORWARD_DAYS)
+        for lookback in analogs.LOOKBACKS:
+            for mode in ("all_regimes", "same_regime"):
+                for horizon in analogs.FORWARD_HORIZONS:
+                    result = report["results"][str(lookback)][mode][f"{horizon}d"]
+                    for period in ("walk_forward", "development", "holdout"):
+                        metrics = result[period]
+                        self.assertGreater(metrics["sample_count"], 0)
+                        self.assertGreaterEqual(metrics["analog_brier"], 0)
+                        self.assertLessEqual(metrics["analog_brier"], 1)
+                        self.assertIn(
+                            metrics["verdict"],
+                            ("validated_edge", "promising_not_conclusive", "no_observed_edge"),
+                        )
 
 
 if __name__ == "__main__":
